@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,30 +15,27 @@ func main() {
 	refreshSeries()
 }
 
+type command struct {
+	Name string
+}
+
 func refreshSeries() {
 	apiKey := readApiKey()
 	endpoint := baseUrl + "command?apikey=" + apiKey
-	fmt.Println(endpoint)
-	data := []byte(`{"name":"RefreshSeries"}`)
-	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(data))
 
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
+	resp, err := http.Post(endpoint, "application/json", b)
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	check(err)
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
 
-	fmt.Println("submitted!")
-	fmt.Printf("%s", body)
+	check(err)
+
+	fmt.Printf("Response:\n%s", body)
 }
 
 func check(e error) {
