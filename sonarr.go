@@ -6,13 +6,17 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 )
 
 const baseUrl = "http://localhost:8989/api/"
 
 func main() {
-	refreshSeries()
+	switch os.Args[1] {
+	case "refresh":
+		refreshSeries()
+	}
 }
 
 type command struct {
