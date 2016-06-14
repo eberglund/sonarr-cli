@@ -17,7 +17,7 @@ func main() {
 	case "refresh":
 		refreshSeries()
 	case "search":
-		search()
+		search(os.Args[2])
 	case "list":
 		list()
 	}
@@ -27,21 +27,16 @@ type command struct {
 	Name string
 }
 
-func search() {
+func search(seriesId string) {
 
 }
 
 func list() {
-	apiKey := readApiKey()
-	resp, err := http.Get(baseUrl + "/series?apikey=" + apiKey)
+	resp, err := http.Get(getUrl("series"))
 
 	check(err)
 
 	fmt.Printf("Response:\n%s", getBody(resp))
-}
-
-func refreshSeries() {
-	sendCommand("RefreshSeries")
 }
 
 func check(e error) {
@@ -50,19 +45,10 @@ func check(e error) {
 	}
 }
 
-func readApiKey() string {
-	key, err := ioutil.ReadFile("api_key")
-	check(err)
-	return strings.TrimSpace(string(key))
-}
-
-func sendCommand(name string) {
-	apiKey := readApiKey()
-	endpoint := baseUrl + "command?apikey=" + apiKey
-
+func refreshSeries() {
 	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(command{Name: name})
-	resp, err := http.Post(endpoint, "application/json", b)
+	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
+	resp, err := http.Post(getUrl("command"), "application/json", b)
 
 	check(err)
 
@@ -77,4 +63,15 @@ func getBody(resp *http.Response) []byte {
 	check(err)
 
 	return body
+}
+
+func getUrl(endpoint string) string {
+	apiKey := readApiKey()
+	return baseUrl + endpoint + "?apikey=" + apiKey
+}
+
+func readApiKey() string {
+	key, err := ioutil.ReadFile("api_key")
+	check(err)
+	return strings.TrimSpace(string(key))
 }
