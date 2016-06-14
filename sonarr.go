@@ -20,22 +20,7 @@ type command struct {
 }
 
 func refreshSeries() {
-	apiKey := readApiKey()
-	endpoint := baseUrl + "command?apikey=" + apiKey
-
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
-	resp, err := http.Post(endpoint, "application/json", b)
-
-	check(err)
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	check(err)
-
-	fmt.Printf("Response:\n%s", body)
+	sendCommand("RefreshSeries")
 }
 
 func check(e error) {
@@ -48,4 +33,23 @@ func readApiKey() string {
 	key, err := ioutil.ReadFile("api_key")
 	check(err)
 	return strings.TrimSpace(string(key))
+}
+
+func sendCommand(name string) {
+	apiKey := readApiKey()
+	endpoint := baseUrl + "command?apikey=" + apiKey
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(command{Name: name})
+	resp, err := http.Post(endpoint, "application/json", b)
+
+	check(err)
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	check(err)
+
+	fmt.Printf("Response:\n%s", body)
 }
