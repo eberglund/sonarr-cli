@@ -16,11 +16,28 @@ func main() {
 	switch os.Args[1] {
 	case "refresh":
 		refreshSeries()
+	case "search":
+		search()
+	case "list":
+		list()
 	}
 }
 
 type command struct {
 	Name string
+}
+
+func search() {
+
+}
+
+func list() {
+	apiKey := readApiKey()
+	resp, err := http.Get(baseUrl + "/series?apikey=" + apiKey)
+
+	check(err)
+
+	fmt.Printf("Response:\n%s", getBody(resp))
 }
 
 func refreshSeries() {
@@ -49,11 +66,15 @@ func sendCommand(name string) {
 
 	check(err)
 
+	fmt.Printf("Response:\n%s", getBody(resp))
+}
+
+func getBody(resp *http.Response) []byte {
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 
 	check(err)
 
-	fmt.Printf("Response:\n%s", body)
+	return body
 }
