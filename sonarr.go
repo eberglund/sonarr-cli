@@ -1,4 +1,4 @@
-package main
+package sonarr
 
 import (
 	"bytes"
@@ -10,49 +10,78 @@ import (
 	"strings"
 )
 
-const baseUrl = "http://localhost:8989/api/"
-
 func main() {
+	s := SonarrAPI("http://localhost:8989/api/", readApiKey())
+
 	switch os.Args[1] {
 	case "refresh":
-		refreshSeries()
+		s.RefreshSeries()
 	case "search":
-		search(os.Args[2])
+		s.Search()
 	case "list":
-		list()
+		s.List()
 	}
+}
+
+type Sonarr interface {
+	RefreshSeries()
+	List()
+	Search()
+}
+
+type api struct {
+	baseUrl string
+	apiKey  string
 }
 
 type command struct {
 	Name string
 }
 
-func search(seriesId string) {
+func SonarrAPI(baseUrl string, apiKey string) Sonarr {
+	return api{baseUrl: baseUrl, apiKey: apiKey}
+}
+
+func (a api) Search() {
 
 }
 
-func list() {
-	resp, err := http.Get(getUrl("series"))
+func (a api) RefreshSeries() {
+
+}
+
+func (a api) List() {
+	resp, err := http.Get(a.getUrl("series"))
 
 	check(err)
 
 	fmt.Printf("Response:\n%s", getBody(resp))
+}
+
+func (a api) refreshSeries() {
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
+	resp, err := http.Post(a.getUrl("command"), "application/json", b)
+
+	check(err)
+
+	fmt.Printf("Response:\n%s", getBody(resp))
+}
+
+func (a api) getUrl(endpoint string) string {
+	return a.baseUrl + endpoint + "?apikey=" + a.apiKey
+}
+
+func readApiKey() string {
+	key, err := ioutil.ReadFile("api_key")
+	check(err)
+	return strings.TrimSpace(string(key))
 }
 
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
-}
-
-func refreshSeries() {
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
-	resp, err := http.Post(getUrl("command"), "application/json", b)
-
-	check(err)
-
-	fmt.Printf("Response:\n%s", getBody(resp))
 }
 
 func getBody(resp *http.Response) []byte {
@@ -63,15 +92,4 @@ func getBody(resp *http.Response) []byte {
 	check(err)
 
 	return body
-}
-
-func getUrl(endpoint string) string {
-	apiKey := readApiKey()
-	return baseUrl + endpoint + "?apikey=" + apiKey
-}
-
-func readApiKey() string {
-	key, err := ioutil.ReadFile("api_key")
-	check(err)
-	return strings.TrimSpace(string(key))
 }
