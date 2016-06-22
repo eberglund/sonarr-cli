@@ -1,4 +1,4 @@
-package sonarr
+package main
 
 import (
 	"bytes"
@@ -19,14 +19,23 @@ func main() {
 	case "search":
 		s.Search()
 	case "list":
-		s.List()
+		series := s.SeriesList()
+		for i := 0; i < len(series); i++ {
+			fmt.Printf("Title - %s\n", series[i].Title)
+			fmt.Printf("Id - %d\n", series[i].Id)
+		}
 	}
 }
 
 type Sonarr interface {
 	RefreshSeries()
-	List()
+	SeriesList() []Series
 	Search()
+}
+
+type Series struct {
+	Title string
+	Id    int
 }
 
 type api struct {
@@ -50,12 +59,18 @@ func (a api) RefreshSeries() {
 
 }
 
-func (a api) List() {
+func (a api) SeriesList() []Series {
 	resp, err := http.Get(a.getUrl("series"))
 
 	check(err)
 
-	fmt.Printf("Response:\n%s", getBody(resp))
+	series := make([]Series, 0)
+
+	//fmt.Printf("Response:\n%s", getBody(resp))
+	json.Unmarshal(getBody(resp), &series)
+
+	return series
+
 }
 
 func (a api) refreshSeries() {
@@ -65,7 +80,8 @@ func (a api) refreshSeries() {
 
 	check(err)
 
-	fmt.Printf("Response:\n%s", getBody(resp))
+	//fmt.Printf("Response:\n%s", getBody(resp))
+	fmt.Printf("ASDF", getBody(resp))
 }
 
 func (a api) getUrl(endpoint string) string {
