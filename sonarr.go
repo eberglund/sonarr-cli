@@ -21,8 +21,7 @@ func main() {
 	case "list":
 		series := s.SeriesList()
 		for i := 0; i < len(series); i++ {
-			fmt.Printf("Title - %s\n", series[i].Title)
-			fmt.Printf("Id - %d\n", series[i].Id)
+			fmt.Printf("%s (%d) - %d / %d\n", series[i].Title, series[i].Id, series[i].EpisodeFileCount, series[i].EpisodeCount)
 		}
 	}
 }
@@ -34,8 +33,10 @@ type Sonarr interface {
 }
 
 type Series struct {
-	Title string
-	Id    int
+	Title            string
+	Id               int
+	EpisodeCount     int
+	EpisodeFileCount int
 }
 
 type api struct {
@@ -66,7 +67,6 @@ func (a api) SeriesList() []Series {
 
 	series := make([]Series, 0)
 
-	//fmt.Printf("Response:\n%s", getBody(resp))
 	json.Unmarshal(getBody(resp), &series)
 
 	return series
@@ -80,7 +80,6 @@ func (a api) refreshSeries() {
 
 	check(err)
 
-	//fmt.Printf("Response:\n%s", getBody(resp))
 	fmt.Printf("ASDF", getBody(resp))
 }
 
