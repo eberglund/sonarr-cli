@@ -17,7 +17,7 @@ func main() {
 	case "refresh":
 		s.RefreshSeries()
 	case "search":
-		s.Search()
+		s.SearchAllSeries()
 	case "list":
 		series := s.SeriesList()
 		for i := 0; i < len(series); i++ {
@@ -29,7 +29,8 @@ func main() {
 type Sonarr interface {
 	RefreshSeries()
 	SeriesList() []Series
-	Search()
+	SearchAllSeries()
+	Search(id int)
 }
 
 type Series struct {
@@ -52,12 +53,24 @@ func SonarrAPI(baseUrl string, apiKey string) Sonarr {
 	return api{baseUrl: baseUrl, apiKey: apiKey}
 }
 
-func (a api) Search() {
-
+func (a api) SearchAllSeries() {
+	series := a.SeriesList()
+	for i := 0; i < len(series); i++ {
+		fmt.Printf("Searching for %s\n", series[i].Title)
+		a.Search(series[i].Id)
+	}
 }
 
-func (a api) RefreshSeries() {
+type searchCommand struct {
+	Name     string
+	SeriesId int
+}
 
+func (a api) Search(id int) {
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(searchCommand{Name: "SeriesSearch", SeriesId: id})
+	_, err := http.Post(a.getUrl("command"), "application/json", b)
+	check(err)
 }
 
 func (a api) SeriesList() []Series {
@@ -70,17 +83,14 @@ func (a api) SeriesList() []Series {
 	json.Unmarshal(getBody(resp), &series)
 
 	return series
-
 }
 
-func (a api) refreshSeries() {
+func (a api) RefreshSeries() {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
-	resp, err := http.Post(a.getUrl("command"), "application/json", b)
+	_, err := http.Post(a.getUrl("command"), "application/json", b)
 
 	check(err)
-
-	fmt.Printf("ASDF", getBody(resp))
 }
 
 func (a api) getUrl(endpoint string) string {

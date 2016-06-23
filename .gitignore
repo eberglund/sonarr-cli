@@ -24,4 +24,4 @@ _testmain.go
 *.prof
 
 api_key
-sonarr
+sonarr-cli
