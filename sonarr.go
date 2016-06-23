@@ -40,17 +40,13 @@ type Series struct {
 	EpisodeFileCount int
 }
 
+func SonarrAPI(baseUrl string, apiKey string) Sonarr {
+	return api{baseUrl: baseUrl, apiKey: apiKey}
+}
+
 type api struct {
 	baseUrl string
 	apiKey  string
-}
-
-type command struct {
-	Name string
-}
-
-func SonarrAPI(baseUrl string, apiKey string) Sonarr {
-	return api{baseUrl: baseUrl, apiKey: apiKey}
 }
 
 func (a api) SearchAllSeries() {
@@ -61,14 +57,15 @@ func (a api) SearchAllSeries() {
 	}
 }
 
-type searchCommand struct {
-	Name     string
-	SeriesId int
-}
-
 func (a api) Search(id int) {
 	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(searchCommand{Name: "SeriesSearch", SeriesId: id})
+	json.NewEncoder(b).Encode(struct {
+		Name     string
+		SeriesId int
+	}{
+		"SeriesSearch",
+		id,
+	})
 	_, err := http.Post(a.getUrl("command"), "application/json", b)
 	check(err)
 }
@@ -87,7 +84,7 @@ func (a api) SeriesList() []Series {
 
 func (a api) RefreshSeries() {
 	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(command{Name: "RefreshSeries"})
+	json.NewEncoder(b).Encode(struct{ Name string }{"RefreshSeries"})
 	_, err := http.Post(a.getUrl("command"), "application/json", b)
 
 	check(err)
